@@ -495,7 +495,7 @@
   </div>
 
   <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4ykppGBJKSICoes4a8D6Q06QnptVO0rjabdPDbpXBWN9GMG8rW2mKUnkzL01-ZWG0/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4ykppGBJKSICoes4a8D6Q06QnptVO0rjabDPbpXBWN9GMG8rW2mKUnkzL01-ZWG0/exec"; 
     
     let cloudRatings = {};
     let recipes = [];
@@ -509,16 +509,15 @@
       const storedUnlocks = localStorage.getItem('csUnlockedDrinks');
       if (storedUnlocks) myUnlocks = JSON.parse(storedUnlocks);
       
-      // 初次載入試算表資料
       await fetchCloudData();
 
-      // 每 30 秒自動更新一次（確保朋友新增時能自動同步）
+      // 每 30 秒自動向試算表更新一次酒單與評分
       setInterval(() => {
         fetchCloudData();
       }, 30000);
     }
 
-    // 使用動態 Script 標籤載入，避開瀏覽器的 CORS 跨網域阻擋
+    // 使用動態 Script 標籤避開 CORS 阻擋，並加入時間戳記防止快取
     function fetchCloudData() {
       return new Promise((resolve) => {
         if (!GOOGLE_SCRIPT_URL) {
@@ -558,7 +557,8 @@
           }
         };
 
-        script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}`;
+        // 加上 &t= 時間戳記，徹底破除手機與瀏覽器的舊快取
+        script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}&t=${Date.now()}`;
         script.onerror = function() {
           console.error("雲端連線失敗，請檢查網路狀態或部署權限");
           document.getElementById('slotStatus').innerText = "連線失敗，請檢查權限";
@@ -627,7 +627,6 @@
       
       if (!GOOGLE_SCRIPT_URL) return;
       try {
-        // 使用 text/plain 避免 OPTIONS 預檢阻擋，保證寫入試算表
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -775,14 +774,12 @@
       document.getElementById('loadingOverlay').style.display = 'flex';
 
       try {
-        // 使用 text/plain 避免 OPTIONS 預檢阻擋，保證寫入 Google 試算表
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
           body: JSON.stringify({ type: 'recipe', recipe: newRec })
         });
 
-        // 本機立即加入，讓送出者馬上看到
         recipes.push(newRec); 
         document.getElementById('loadingOverlay').style.display = 'none';
         closeModals();
@@ -794,7 +791,6 @@
         document.getElementById('newRatio').value = ''; 
         document.getElementById('newMethod').value = '';
         
-        // 重新整理圖鑑顯示
         renderGallery();
       } catch (e) {
         document.getElementById('loadingOverlay').style.display = 'none';
