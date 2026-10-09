@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>超商特調拉霸機 | 雲端同步版</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #121418;
+      --panel-dark: #1A1D24;
+      --gold-light: #FCE588;
+      --gold-dark: #D4AF37;
+      --accent-red: #E63946;
+      --text-gray: #A0AAB2;
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: white;
+      font-family: 'Noto Serif TC', serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      background: linear-gradient(180deg, #1A1D24 0%, #0F1115 100%);
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 2rem;
+      box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    }
+    .header-dots {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 40px;
+      margin-top: 40px;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--gold-dark);
+      box-shadow: 0 0 8px var(--gold-light);
+    }
+    .title-area {
+      text-align: center;
+      padding: 10px 20px;
+    }
+    .subtitle {
+      color: var(--gold-light);
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .main-title {
+      color: var(--gold-light);
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-shadow: 0 0 15px rgba(252, 229, 136, 0.4);
+      margin-bottom: 5px;
+    }
+    .desc {
+      color: var(--text-gray);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .slot-machine-wrapper {
+      position: relative;
+      margin: 20px auto;
+      width: 90%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slot-window {
+      width: 80%;
+      background: #000;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #333;
+      box-shadow: inset 0 10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .slot-content {
+      transition: transform 0.1s linear;
+    }
+    .rolling .slot-content {
+      animation: slotSpin 0.15s linear infinite;
+    }
+    @keyframes slotSpin {
+      0% { transform: translateY(-50px); opacity: 0; }
+      50% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(50px); opacity: 0; }
+    }
+    .slot-emojis {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      letter-spacing: 5px;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    }
+    .slot-name {
+      color: var(--gold-light);
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .lever-container {
+      width: 20%;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .lever-stick {
+      width: 8px;
+      height: 80px;
+      background: linear-gradient(90deg, #B8860B, #FFD700, #B8860B);
+      border-radius: 4px;
+      transition: transform 0.3s ease;
+      transform-origin: bottom center;
+    }
+    .lever-ball {
+      width: 45px;
+      height: 45px;
+      background: radial-gradient(circle at 30% 30%, #ff6b6b, var(--accent-red), #8b0000);
+      border-radius: 50%;
+      position: absolute;
+      top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9rem;
+      box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4), inset -3px -3px 10px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      z-index: 10;
+    }
+    .lever-base {
+      width: 30px;
+      height: 20px;
+      background: #333;
+      border-radius: 50% 50% 0 0;
+      position: absolute;
+      bottom: 40px;
+      border-bottom: 2px solid #111;
+    }
+    .pulled .lever-stick { transform: scaleY(0.4) translateY(80px); }
+    .pulled .lever-ball { transform: translateY(60px); }
+    .lever-hint {
+      text-align: center;
+      color: #666;
+      font-size: 0.75rem;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+    .result-card {
+      background: var(--panel-dark);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 0 20px;
+      border: 1px solid #2A2E35;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    .card-title {
+      color: var(--gold-light);
+      font-size: 1.4rem;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+    .card-price {
+      font-size: 0.9rem;
+      color: #888;
+      font-weight: normal;
+      margin-left: 8px;
+    }
+    .tag {
+      background: rgba(46, 139, 87, 0.15);
+      color: #4ade80;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      border: 1px solid rgba(46, 139, 87, 0.3);
+      white-space: nowrap;
+      margin-left: 10px;
+    }
+    .tag-player { background: rgba(255, 215, 0, 0.15); color: #ffd700; border-color: rgba(255, 215, 0, 0.3); }
+    .ratio-box {
+      background: #111316;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #222;
+      font-family: monospace;
+      font-size: 0.95rem;
+      color: #ddd;
+    }
+    .method-text { color: #ccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 15px; }
+    .tip-box { color: #888; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 8px; }
+    
+    .star-rating {
+      display: flex; gap: 2px; margin-top: 15px; padding-top: 15px;
+      border-top: 1px dashed #333; justify-content: center;
+    }
+    .star { color: #333; font-size: 1.2rem; cursor: pointer; transition: color 0.2s; }
+    .star.active { color: var(--gold-dark); }
+    .rating-label { text-align: center; font-size: 0.75rem; color: #666; margin-top: 5px; }
+
+    /* Nav Buttons */
+    .nav-buttons {
+      position: absolute; top: 15px; width: 100%; padding: 0 15px;
+      display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; z-index: 50;
+    }
+    .btn-small {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #aaa; padding: 6px 10px; border-radius: 15px; font-size: 0.75rem;
+      cursor: pointer; backdrop-filter: blur(5px); transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-small:hover { background: rgba(255,255,255,0.1); color: var(--gold-light); }
+
+    /* Modals */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center;
+      backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      background: var(--panel-dark); width: 90%; max-width: 450px; max-height: 85vh;
+      border-radius: 16px; border: 1px solid #333; overflow-y: auto; padding: 25px; position: relative;
+    }
+    .close-modal { position: absolute; top: 15px; right: 20px; color: #888; font-size: 1.5rem; cursor: pointer; }
+    
+    /* Gallery & Leaderboard */
+    .progress-bar-container { background: #111; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #333; }
+    .progress-text { color: var(--gold-light); font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; }
+    .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold-light)); width: 0%; transition: width 0.5s ease; }
+    
+    .leaderboard-box { background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(0,0,0,0) 100%); border: 1px solid rgba(212,175,55,0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; }
+    .leaderboard-title { color: #fff; font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .rank-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+    .rank-item:last-child { border-bottom: none; }
+    .rank-medal { font-size: 1.2rem; width: 30px; }
+    .rank-name { flex-grow: 1; font-size: 0.9rem; color: #ddd; }
+    .rank-score { color: var(--gold-light); font-size: 0.85rem; }
+
+    .category-header { color: var(--gold-light); font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px; margin: 20px 0 10px 0; }
+    .recipe-list-item {
+      padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 10px;
+      border: 1px solid #333; transition: all 0.3s;
+    }
+    .recipe-list-item.locked { opacity: 0.5; filter: grayscale(80%); border-style: dashed; }
+    .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .item-name-area { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .item-name { font-size: 0.95rem; color: #fff; font-weight: bold; }
+    .status-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; }
+    .status-unlocked { background: rgba(46, 139, 87, 0.2); color: #4ade80; border: 1px solid rgba(46, 139, 87, 0.4); }
+    .status-locked { background: rgba(230, 57, 70, 0.2); color: #ff6b6b; border: 1px solid rgba(230, 57, 70, 0.4); }
+    .item-emojis { font-size: 1.1rem; letter-spacing: 2px; }
+    .item-desc { font-size: 0.75rem; color: #888; margin-top: 4px; line-height: 1.4; }
+    
+    .item-action-area {
+      margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .avg-score-text { font-size: 0.8rem; color: var(--gold-light); }
+    .btn-rate {
+      background: var(--gold-dark); color: #000; font-size: 0.75rem; font-weight: bold;
+      padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer;
+    }
+    .btn-rate:hover { background: #ffdf40; }
+
+    /* 彈出式星星評分 Modal 樣式 */
+    .rating-modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center;
+    }
+    .rating-modal-content {
+      background: var(--panel-dark); width: 85%; max-width: 350px; border-radius: 16px;
+      border: 1px solid #444; padding: 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .popup-stars { display: flex; justify-content: center; gap: 3px; margin: 20px 0; }
+    .popup-star { color: #444; font-size: 1.8rem; cursor: pointer; transition: color 0.1s; }
+    .popup-star.active { color: var(--gold-dark); }
+    .btn-close-popup {
+      background: #333; color: #ccc; border: none; padding: 8px 20px; border-radius: 8px;
+      font-size: 0.85rem; cursor: pointer; margin-top: 10px;
+    }
+    .btn-close-popup:hover { background: #444; color: white; }
+
+    /* Tips List */
+    .tips-block { margin-bottom: 25px; }
+    .tips-title { color: var(--gold-light); font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 12px; }
+    .tips-list { list-style: none; padding: 0; margin: 0; }
+    .tips-list li { color: #ccc; font-size: 0.85rem; line-height: 1.6; margin-bottom: 12px; padding-left: 18px; position: relative; }
+    .tips-list li::before { content: "•"; color: var(--gold-dark); position: absolute; left: 0; font-size: 1.2rem; line-height: 1.2; }
+    .base-spirit-name { color: #fff; font-weight: bold; display: inline-block; margin-bottom: 2px; }
+
+    /* Form Styles */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-family: inherit;
+    }
+    .btn-submit { width: 100%; padding: 12px; background: var(--gold-dark); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+    .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; border-radius: 16px; z-index: 50; color: var(--gold-light); }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="nav-buttons">
+      <button class="btn-small" onclick="openAddModal()">＋ 新增酒單</button>
+      <button class="btn-small" onclick="openGalleryModal()">📜 圖鑑與排行</button>
+      <button class="btn-small" onclick="openTipsModal()">💡 調酒小撇步</button>
+    </div>
+
+    <div class="header-dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <div class="title-area">
+      <div class="subtitle">CONVENIENCE STORE EDITION</div>
+      <div class="main-title">超商特調拉霸機</div>
+      <div class="desc">不用思考，直接抽一杯<br>決定你的今日小酌</div>
+    </div>
+
+    <div class="slot-machine-wrapper">
+      <div class="slot-window" id="slotWindow">
+        <div class="slot-content" id="slotContent">
+          <div class="slot-emojis">❓❓❓</div>
+          <div class="slot-name" id="slotStatus">載入雲端酒單中...</div>
+        </div>
+      </div>
+      
+      <div class="lever-container">
+        <div class="lever-stick" id="leverStick"></div>
+        <div class="lever-base"></div>
+        <div class="lever-ball" id="leverBall" onclick="pullLever()">拉</div>
+      </div>
+    </div>
+    <div class="lever-hint">拉一下 · 抽一杯</div>
+
+    <div class="result-card" id="resultCard">
+      <div class="card-header">
+        <div>
+          <span class="card-title" id="resTitle">酒名</span>
+          <span class="card-price" id="resPrice"></span>
+        </div>
+        <span class="tag" id="resTag">標籤</span>
+      </div>
+      <div class="ratio-box" id="resRatio">比例</div>
+      <div class="method-text" id="resMethod">作法</div>
+      <div class="tip-box">
+        💡 <span id="resTip">提示</span>
+      </div>
+      
+      <div class="star-rating" id="starRating"></div>
+      <div class="rating-label">打個分數吧！</div>
+    </div>
+  </div>
+
+  <!-- 歷史圖鑑 Modal -->
+  <div class="modal" id="galleryModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModals()">×</span>
+      
+      <div class="progress-bar-container">
+        <div class="progress-text" id="progressText">🏆 你的微醺圖鑑 (進度: 0 / 0)</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div style="font-size:0.7rem; color:#888; margin-top:5px;">點擊「評分解鎖」即可打分數</div>
+      </div>
+
+      <div class="leaderboard-box" id="leaderboardBox">
+        <div class="leaderboard-title">🏆 人氣排行榜 Top 3</div>
+        <div id="leaderboardContent">載入中...</div>
+      </div>
+
+      <div id="galleryContainer"></div>
+    </div>
+  </div>
+
+  <!-- 點擊圖鑑後彈出的互動星星評分視窗 -->
+  <div class="rating-modal" id="popupRatingModal">
+    <div class="rating-modal-content">
+      <h3 id="popupTitle" style="color: var(--gold-light); font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">為酒評分</h3>
+      <p style="color: #888; font-size: 0.75rem; margin-bottom: 10px;">點擊下方星星打分數</p>
+      <div class="popup-stars" id="popupStarsContainer"></div>
+      <div id="popupScoreText" style="color: var(--gold-light); font-weight: bold; margin-bottom: 15px;">請選擇分數</div>
+      <button class="btn-close-popup" onclick="closePopupRating()">取消</button>
+    </div>
+  </div>
+
+  <!-- 小撇步 Modal -->
+  <div class="modal" id="tipsModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModals()">×</span>
+      <h2 class="card-title" style="margin-bottom: 20px;">💡 調酒小撇步</h2>
+      
+      <div class="tips-block">
+        <div class="tips-title">【 超商調酒生存法則 】</div>
+        <ul class="tips-list">
+          <li><strong>順序很重要：</strong>先倒搭配的飲料，再加基酒，方便控制酒感濃淡，適合怕酒味的人。</li>
+          <li><strong>溫度是關鍵：</strong>冰塊裝到八九分滿，溫度夠低口感才順。推薦直接買超商「冰塊杯」。</li>
+          <li><strong>氣泡請溫柔：</strong>含有氣泡飲（雪碧、蘇打水、冰結），攪拌要輕柔，千萬不要搖晃。</li>
+          <li><strong>注意後勁：</strong>氣泡酒的氣泡會加速酒精吸收，容易喝快，請隨時注意飲用速度。</li>
+        </ul>
+      </div>
+
+      <div class="tips-block">
+        <div class="tips-title">【 六大基酒 × 超商百搭指南 】</div>
+        <ul class="tips-list">
+          <li><span class="base-spirit-name">伏特加 (Vodka)：</span>幾乎百搭！無色無味，最適合套各種果汁（蔓越莓,柳橙），或是運動飲料加氣泡水。</li>
+          <li><span class="base-spirit-name">琴酒 (Gin)：</span>自帶杜松子與草本香，適合搭配雪碧、通寧水，或是帶果香的微甜茶飲（柚子茶,蘋果紅茶）非常解膩。</li>
+          <li><span class="base-spirit-name">蘭姆酒 (Rum)：</span>帶有焦糖甜香，絕對是「可樂」的靈魂伴侶。搭配超商檸檬紅茶也非常對味。</li>
+          <li><span class="base-spirit-name">龍舌蘭 (Tequila)：</span>特殊植物香氣且嗆辣，強烈建議搭配「雪碧＋檸檬汁」或葡萄柚綠茶，酸甜感能完美壓制嗆味。</li>
+          <li><span class="base-spirit-name">威士忌 (Whiskey)：</span>搭配無糖烏龍茶最能引出茶酒香；搭配冬瓜茶是經典台式喝法；配蘋果蘇打則是清甜氣泡飲。</li>
+          <li><span class="base-spirit-name">利口酒 (Liqueur)：</span>如野格配紅牛（提神炸彈）或烏龍奶茶；貝禮詩奶酒配熱可可或濃縮咖啡。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增酒單 Modal -->
+  <div class="modal" id="addModal">
+    <div class="modal-content">
+      <div class="loading-overlay" id="loadingOverlay">正在上傳至雲端...</div>
+      <span class="close-modal" onclick="closeModals()">×</span>
+      <h2 class="card-title" style="margin-bottom: 20px;">＋ 上傳私房酒單</h2>
+      
+      <div class="form-group">
+        <label>分類 (Category)</label>
+        <select id="newCategory">
+          <option value="🍎 果香妹酒系">🍎 果香妹酒系</option>
+          <option value="🍵 茶酒奶酒系">🍵 茶酒奶酒系</option>
+          <option value="🍺 氣泡啤酒系">🍺 氣泡啤酒系</option>
+          <option value="🔥 斷片挑戰系">🔥 斷片挑戰系</option>
+          <option value="🌟 玩家原創特調">🌟 玩家原創特調</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>酒名 (Name)</label>
+        <input type="text" id="newName" placeholder="例如：葡萄多多" required>
+      </div>
+      <div class="form-group">
+        <label>材料 Emojis (最多 3~4 個)</label>
+        <input type="text" id="newEmojis" placeholder="例如：🥃🧃🍾" required>
+      </div>
+      <div class="form-group">
+        <label>風味標籤 (Tag)</label>
+        <input type="text" id="newTag" placeholder="例如：酸甜乳酸感">
+      </div>
+      <div class="form-group">
+        <label>比例 (Ratio) - 建議用 1:X 格式</label>
+        <input type="text" id="newRatio" placeholder="例如：龍舌蘭:葡萄汁 = 1 : 1.5">
+      </div>
+      <div class="form-group">
+        <label>作法與介紹 (Method)</label>
+        <textarea id="newMethod" rows="3" placeholder="加入冰塊..."></textarea>
+      </div>
+      <button class="btn-submit" onclick="saveNewRecipe()">上傳並分享酒單</button>
+    </div>
+  </div>
+
+  <script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4ykppGBJKSICoes4a8D6Q06QnptVO0rjabdPDbpXBWN9GMG8rW2mKUnkzL01-ZWG0/exec"; 
+    
+    let cloudRatings = {};
+    let recipes = [];
+    let myUnlocks = []; 
+    let currentRecipeIndex = null;
+    let isRolling = false;
+    let dataLoaded = false;
+    let activeRatingRecipe = null;
+
+    async function init() {
+      const storedUnlocks = localStorage.getItem('csUnlockedDrinks');
+      if (storedUnlocks) myUnlocks = JSON.parse(storedUnlocks);
+      
+      // 初次載入試算表資料
+      await fetchCloudData();
+
+      // 每 30 秒自動更新一次（確保朋友新增時能自動同步）
+      setInterval(() => {
+        fetchCloudData();
+      }, 30000);
+    }
+
+    // 使用動態 Script 標籤載入，避開瀏覽器的 CORS 跨網域阻擋
+    function fetchCloudData() {
+      return new Promise((resolve) => {
+        if (!GOOGLE_SCRIPT_URL) {
+          document.getElementById('slotStatus').innerText = "等待抽取...";
+          dataLoaded = true;
+          resolve();
+          return;
+        }
+
+        const script = document.createElement('script');
+        const callbackName = 'onDataLoaded_' + Math.floor(Math.random() * 1000000);
+
+        window[callbackName] = function(data) {
+          try {
+            cloudRatings = data.ratings || {};
+            const cloudRecipes = data.recipes || [];
+
+            if (cloudRecipes.length > 0) {
+              const uniqueMap = new Map();
+              cloudRecipes.forEach(item => {
+                if (item && item.name) {
+                  uniqueMap.set(item.name.trim(), item);
+                }
+              });
+              recipes = Array.from(uniqueMap.values());
+            }
+
+            document.getElementById('slotStatus').innerText = `已載入 ${recipes.length} 款特調！點擊拉桿開始`;
+            dataLoaded = true;
+            renderGallery();
+          } catch (err) {
+            console.error("資料解析錯誤", err);
+          } finally {
+            delete window[callbackName];
+            script.remove();
+            resolve();
+          }
+        };
+
+        script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}`;
+        script.onerror = function() {
+          console.error("雲端連線失敗，請檢查網路狀態或部署權限");
+          document.getElementById('slotStatus').innerText = "連線失敗，請檢查權限";
+          dataLoaded = true;
+          delete window[callbackName];
+          script.remove();
+          resolve();
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function openPopupRating(recipeName) {
+      activeRatingRecipe = recipeName;
+      document.getElementById('popupTitle').innerText = `為「${recipeName}」評分`;
+      
+      const container = document.getElementById('popupStarsContainer');
+      container.innerHTML = '';
+      
+      const currentVal = cloudRatings[recipeName] || 0;
+      document.getElementById('popupScoreText').innerText = currentVal > 0 ? `目前評分：${currentVal} 顆星` : `請選擇分數`;
+
+      for (let i = 1; i <= 10; i++) {
+        const star = document.createElement('span');
+        star.innerHTML = '★';
+        star.className = 'popup-star ' + (i <= currentVal ? 'active' : '');
+        
+        star.onmouseover = () => {
+          Array.from(container.children).forEach((s, idx) => {
+            s.style.color = idx < i ? 'var(--gold-dark)' : '#444';
+          });
+          document.getElementById('popupScoreText').innerText = `${i} 顆星`;
+        };
+        
+        container.onmouseleave = () => {
+          Array.from(container.children).forEach((s, idx) => {
+            s.className = 'popup-star ' + (idx < (cloudRatings[activeRatingRecipe] || 0) ? 'active' : '');
+            s.style.color = '';
+          });
+          const val = cloudRatings[activeRatingRecipe] || 0;
+          document.getElementById('popupScoreText').innerText = val > 0 ? `目前評分：${val} 顆星` : `請選擇分數`;
+        };
+
+        star.onclick = () => {
+          submitRatingFromPopup(i);
+        };
+
+        container.appendChild(star);
+      }
+
+      document.getElementById('popupRatingModal').style.display = 'flex';
+    }
+
+    async function submitRatingFromPopup(rating) {
+      if (!activeRatingRecipe) return;
+      
+      if (!myUnlocks.includes(activeRatingRecipe)) {
+        myUnlocks.push(activeRatingRecipe);
+        localStorage.setItem('csUnlockedDrinks', JSON.stringify(myUnlocks));
+      }
+      
+      cloudRatings[activeRatingRecipe] = rating;
+      renderGallery();
+      closePopupRating();
+      
+      if (!GOOGLE_SCRIPT_URL) return;
+      try {
+        // 使用 text/plain 避免 OPTIONS 預檢阻擋，保證寫入試算表
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({ type: 'rating', name: activeRatingRecipe, rating: rating })
+        });
+      } catch (error) {
+        console.log("評分上傳失敗");
+      }
+    }
+
+    function closePopupRating() {
+      document.getElementById('popupRatingModal').style.display = 'none';
+      activeRatingRecipe = null;
+    }
+
+    function createStars(containerId, recipeName) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      const currentRating = cloudRatings[recipeName] || 0;
+      
+      for (let i = 1; i <= 10; i++) {
+        const star = document.createElement('span');
+        star.innerHTML = '★';
+        star.className = 'star ' + (i <= currentRating ? 'active' : '');
+        
+        star.onmouseover = () => {
+          Array.from(container.children).forEach((s, idx) => { s.style.color = idx < i ? 'var(--gold-dark)' : '#333'; });
+        };
+        container.onmouseleave = () => updateStarDisplay(recipeName);
+        star.onclick = () => submitRatingToCloud(recipeName, i);
+        
+        container.appendChild(star);
+      }
+    }
+
+    async function submitRatingToCloud(recipeName, rating) {
+      if (!myUnlocks.includes(recipeName)) {
+        myUnlocks.push(recipeName);
+        localStorage.setItem('csUnlockedDrinks', JSON.stringify(myUnlocks));
+      }
+      cloudRatings[recipeName] = rating;
+      updateStarDisplay(recipeName);
+      renderGallery();
+
+      if (!GOOGLE_SCRIPT_URL) return;
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({ type: 'rating', name: recipeName, rating: rating })
+        });
+      } catch (error) {
+        console.log("評分上傳失敗");
+      }
+    }
+
+    function updateStarDisplay(recipeName) {
+      const container = document.getElementById('starRating');
+      if (!container) return;
+      const currentRating = cloudRatings[recipeName] || 0;
+      Array.from(container.children).forEach((s, idx) => {
+        s.className = 'star ' + (idx < currentRating ? 'active' : '');
+        s.style.color = '';
+      });
+    }
+
+    function pullLever() {
+      if (!dataLoaded) return alert('還在抓取雲端酒單，請稍等一秒鐘！');
+      if (isRolling) return;
+      isRolling = true;
+      
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('leverStick').parentElement.classList.add('pulled');
+      document.getElementById('slotWindow').classList.add('rolling');
+      
+      let counter = 0;
+      const rollInterval = setInterval(() => {
+        let tempIndex = Math.floor(Math.random() * recipes.length);
+        updateSlotDisplay(recipes[tempIndex]);
+        counter++;
+        if (counter > 15) {
+          clearInterval(rollInterval);
+          finishRoll();
+        }
+      }, 100);
+      
+      setTimeout(() => { document.getElementById('leverStick').parentElement.classList.remove('pulled'); }, 300);
+    }
+
+    function finishRoll() {
+      document.getElementById('slotWindow').classList.remove('rolling');
+      let newIndex;
+      do { newIndex = Math.floor(Math.random() * recipes.length); } while (newIndex === currentRecipeIndex && recipes.length > 1);
+      
+      currentRecipeIndex = newIndex;
+      const result = recipes[currentRecipeIndex];
+      updateSlotDisplay(result);
+      
+      document.getElementById('resTitle').innerText = result.name;
+      document.getElementById('resPrice').innerText = result.price || '自訂';
+      document.getElementById('resTag').innerText = result.tag;
+      document.getElementById('resRatio').innerText = result.ratio;
+      document.getElementById('resMethod').innerText = result.method;
+      document.getElementById('resTip').innerText = result.tip;
+      
+      createStars('starRating', result.name);
+      document.getElementById('resultCard').style.display = 'block';
+      isRolling = false;
+    }
+
+    function updateSlotDisplay(recipe) {
+      document.querySelector('.slot-emojis').innerText = recipe.emojis;
+      document.getElementById('slotStatus').innerText = recipe.name;
+    }
+
+    function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
+    function openTipsModal() { document.getElementById('tipsModal').style.display = 'flex'; }
+    function openGalleryModal() { 
+      renderGallery();
+      document.getElementById('galleryModal').style.display = 'flex'; 
+    }
+    function closeModals() { 
+      document.getElementById('addModal').style.display = 'none'; 
+      document.getElementById('galleryModal').style.display = 'none'; 
+      document.getElementById('tipsModal').style.display = 'none'; 
+    }
+
+    async function saveNewRecipe() {
+      const name = document.getElementById('newName').value.trim();
+      const emojis = document.getElementById('newEmojis').value.trim();
+      if (!name || !emojis) return alert('名稱和Emojis必填喔！');
+
+      const newRec = {
+        category: document.getElementById('newCategory').value,
+        name: name,
+        emojis: emojis,
+        price: "自訂",
+        tag: document.getElementById('newTag').value.trim() || "私房推薦",
+        ratio: document.getElementById('newRatio').value.trim() || "隨心所欲",
+        method: document.getElementById('newMethod').value.trim() || "混在一起就對了",
+        tip: "這是玩家分享的專屬味道！"
+      };
+
+      document.getElementById('loadingOverlay').style.display = 'flex';
+
+      try {
+        // 使用 text/plain 避免 OPTIONS 預檢阻擋，保證寫入 Google 試算表
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({ type: 'recipe', recipe: newRec })
+        });
+
+        // 本機立即加入，讓送出者馬上看到
+        recipes.push(newRec); 
+        document.getElementById('loadingOverlay').style.display = 'none';
+        closeModals();
+        alert('上傳成功！現在大家都能抽到你的酒單了！');
+
+        document.getElementById('newName').value = ''; 
+        document.getElementById('newEmojis').value = '';
+        document.getElementById('newTag').value = ''; 
+        document.getElementById('newRatio').value = ''; 
+        document.getElementById('newMethod').value = '';
+        
+        // 重新整理圖鑑顯示
+        renderGallery();
+      } catch (e) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        alert('上傳失敗，請檢查網路狀態');
+      }
+    }
+
+    function renderGallery() {
+      const totalCount = recipes.length;
+      const unlockedCount = recipes.filter(r => myUnlocks.includes(r.name)).length;
+      document.getElementById('progressText').innerText = `🏆 你的微醺圖鑑 (進度: ${unlockedCount} / ${totalCount})`;
+      document.getElementById('progressBar').style.width = `${totalCount ? (unlockedCount / totalCount) * 100 : 0}%`;
+
+      const lbContainer = document.getElementById('leaderboardContent');
+      const rankedRecipes = [...recipes]
+        .filter(r => cloudRatings[r.name] > 0)
+        .sort((a, b) => cloudRatings[b.name] - cloudRatings[a.name])
+        .slice(0, 3);
+      
+      lbContainer.innerHTML = '';
+      if (rankedRecipes.length === 0) {
+        lbContainer.innerHTML = '<div style="color:#888; font-size:0.85rem;">目前還沒有足夠的評分紀錄喔！</div>';
+      } else {
+        const medals = ['🥇', '🥈', '🥉'];
+        rankedRecipes.forEach((recipe, index) => {
+          lbContainer.innerHTML += `
+            <div class="rank-item">
+              <div class="rank-medal">${medals[index]}</div>
+              <div class="rank-name">${recipe.name} <span style="font-size:0.7rem; color:#888;">${recipe.emojis}</span></div>
+              <div class="rank-score">★ ${cloudRatings[recipe.name]} 分</div>
+            </div>`;
+        });
+      }
+
+      const container = document.getElementById('galleryContainer');
+      container.innerHTML = '';
+      const grouped = recipes.reduce((acc, recipe) => {
+        if (!acc[recipe.category]) acc[recipe.category] = [];
+        acc[recipe.category].push(recipe);
+        return acc;
+      }, {});
+
+      for (const [category, list] of Object.entries(grouped)) {
+        container.innerHTML += `<div class="category-header">${category}</div>`;
+
+        list.forEach(item => {
+          const isUnlocked = myUnlocks.includes(item.name);
+          const isPlayer = item.category === "🌟 玩家原創特調";
+          const ratingVal = cloudRatings[item.name];
+          
+          const div = document.createElement('div');
+          div.className = `recipe-list-item ${isUnlocked ? '' : 'locked'}`;
+          
+          let statusHtml = isUnlocked 
+            ? `<span class="status-badge status-unlocked">已解鎖 (★ ${ratingVal}分)</span>`
+            : `<span class="status-badge status-locked">🔒 未解鎖</span>`;
+            
+          if (isPlayer) statusHtml += ` <span class="tag tag-player">玩家原創</span>`;
+
+          div.innerHTML = `
+            <div class="item-header">
+              <div class="item-name-area">
+                <span class="item-name">${item.name}</span>
+                ${statusHtml}
+              </div>
+              <div class="item-emojis">${item.emojis}</div>
+            </div>
+            <div class="item-desc">${item.ratio}</div>
+            <div class="item-action-area">
+              <span class="avg-score-text">平均分數: ${ratingVal ? '★ ' + ratingVal + ' 分' : '尚無評分'}</span>
+              <button class="btn-rate" onclick="openPopupRating('${item.name}')">${isUnlocked ? '修改評分' : '📝 評分解鎖'}</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
